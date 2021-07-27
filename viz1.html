@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CS 416 Data Visualization Narrative Visualization</title>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<style> circle {stroke: black;} 
+div.tooltip {	
+    position: absolute;			
+    text-align: left;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;		
+}
+.content {
+  max-width: 500px;
+  margin: auto;
+}
+</style>
+</head>
+<div class='content'>
+<h1 text-align='center'>CS 416 Data Visualization Narrative Visualization</h1>
+<body onload='init()'>
+<svg width=600 height=600></svg>
+<div id="div_template" text-align='left'></div>
+<script type="text/javascript">
+// Format title 
+d3.select("p").style("font-size", "large").style("font-weight", "bold")
+
+async function init() {
+// Import data
+var data = await d3.csv("https://flunky.github.io/cars2017.csv");
+// Set up first scene
+// Set up scales
+var scale_x = d3.scaleLog().domain([10, 150]).range([0,500]);
+var scale_y = d3.scaleLog().domain([10, 150]).range([500,0]);
+var colors = d3.scaleOrdinal().domain(['Gasoline', 'Diesel', 'Electricity']).range(d3.schemeCategory10);
+
+// create a tooltip
+var Tooltip = d3.select("#div_template")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "2px")
+    .style("border-radius", "5px")
+    .style("padding", "5px")
+    .style("display", "flex")
+    .style('width', 'auto')
+    .style('height', 'auto')
+    .style('float', 'left');
+
+// Three function that change the tooltip when user hover / move / leave a cell
+var mouseover = function(d) {
+    Tooltip
+        .style("opacity", 1)
+
+    d3.select(this)
+        .raise()
+        .style('stroke-width',3)
+};
+var mousemove = function(d) {
+    Tooltip
+        .html("Make: " + d.Make +
+        "<br>Cylinders: " + d.EngineCylinders + 
+        "<br>Fuel: " + d.Fuel)
+        .style("left", (d3.event.pageX) + "px")
+        .style("top", (d3.event.pageY) + "px")
+};
+var mouseleave = function(d) {
+    Tooltip
+        .style("opacity", 0)
+    d3.select(this)
+        .style('stroke-width',1)
+};
+
+// Draw circles for data points
+d3.select('svg').append('g')
+    .attr("transform", "translate(50,50)")
+    .selectAll('circle').data(data)
+    .enter()
+    .append('circle')
+    .attr('class', function(d,i) {return "cars " + i;})
+    .attr("cx", function(d){return scale_x(d.AverageCityMPG)})
+    .attr("cy", function(d){return scale_y(d.AverageHighwayMPG)})
+    .attr("r", function(d) {return parseInt(d.EngineCylinders) + 2})
+    .attr("fill", function(d) {return colors(d.Fuel)})
+    .on('mouseover', mouseover)
+    .on('mousemove', mousemove)
+    .on('mouseout', mouseleave);
+      
+//Label y axis
+d3.select('svg').append('g')
+    .attr("transform","translate(50,50)")
+    .call(d3.axisLeft(scale_y)
+        .tickValues([10,20,50,100])
+        .tickFormat(d3.format("~s")))
+    .append("text")
+    .attr("fill", "black")
+    .attr("transform", "translate(-25,250)rotate(270)")
+    .style("text-anchor","middle")
+    .text("Average Highway MPG");
+//Label x axis
+d3.select('svg').append('g')
+    .attr("transform", "translate(50,550)")
+    .call(d3.axisBottom(scale_x)
+        .tickValues([10,20,50,100])
+        .tickFormat(d3.format("~s")))
+    .append("text")
+    .attr("fill","black")
+    .attr("transform", "translate(250,25)")
+    .style("text-anchor","middle")
+    .text("Average City MPG");
+
+//Add color legend
+d3.select('svg').append('g').selectAll('dots')
+    .data(['Gasoline', 'Diesel', 'Electricity'])
+    .enter().append('circle')
+    .attr('cx', 450)
+    .attr('cy', function(d,i) {return 500 + i*15;})
+    .attr('r',7)
+    .style('fill', function(d){return colors(d)})
+
+d3.select('svg').append('g').selectAll('dots_labels')
+    .data(['Gasoline', 'Diesel', 'Electricity'])
+    .enter().append('text')
+    .attr('x', 475)
+    .attr('y', function(d,i) {return 500 + i*15;})
+    .attr('text-anchor', 'left')
+    .text(function(d){return d;})
+    .style('fill','black')
+    .style('alignment-baseline', 'middle')
+
+//Add size legend
+d3.select('svg').append('g').selectAll('rings')
+    .data([0,2,3,4,6,8,10,12])
+    .enter().append('circle')
+    .attr('cx', 450)
+    .attr('cy', function(d,i) {return 350 + i*15})
+    .attr('r', function(d) {return d + 2})
+    .style('fill','none');
+
+d3.select('svg').append('g').selectAll('rings_labels')
+    .data([0,2,3,4,6,8,10,12])
+    .enter().append('text')
+    .attr('x', 475)
+    .attr('y', function(d,i) {return 350 + i*15;})
+    .attr('text-anchor', 'left')
+    .text(function(d){return d;})
+    .style('fill','black')
+    .style('alignment-baseline', 'middle');
+/*
+//Add a Voronoi grid for mouseover tooltips
+const voronoi = d3.voronoi()
+    .x(function(d) {return scale_x(d.AverageCityMPG);})
+    .y(function(d) {return scale_y(d.AverageHighwayMPG);})
+    .extent([50,50], [600,600]);
+
+d3.select('svg').append('g').selectAll('path')
+    .data(voronoi(data).polygons())
+    .enter().append('path')
+    .attr('d', function(d,i) {return d ? ("M" + d.join("L") + "Z") : null;}) 
+    .datum(function(d,i) {return d.point;})
+    .attr('class', function(d,i) {return "voronoi " + i;})
+    .style('stroke','black')
+    .style('fill','none')
+    .style('pointer-events','all')
+
+
+//Show the tooltip on the hovered over circle instead of the Voronoi grid
+function showTooltip(d) {
+    //Save the circle element (not the voronoi which is triggering the hover event)
+    //in a variable by using the unique class of the voronoi (CountryCode)
+    var element = d3.selectAll(".countries."+d.CountryCode);
+
+    //Show the tooltip over the "element" variable (the circle) instead of "this"
+    $(element).popover({
+        placement: 'auto top',
+        container: '#chart',
+        trigger: 'manual',
+        html : true,
+        content: function() { return d.Country; }
+        });
+    $(element).popover('show');
+}
+
+//Hide the tooltip when the mouse moves away
+function removeTooltip(d) {
+    $('.popover').each(function() {
+        $(this).remove();
+    });
+}
+*/
+}
+
+
+
+
+</script>
+
+<ul class="nav justify-content-center">
+    <li class="nav-item">
+      <a class="nav-link disabled" href="#">City/Highway MPG</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="index.html">Fuel Type MPG</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="index.html">Cylinders MPG</a>
+    </li>
+  </ul>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
