@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style> circle {stroke: black;} 
+        div.tooltip {	
+            position: absolute;			
+            text-align: left;			
+            width: 60px;					
+            height: 28px;					
+            padding: 2px;				
+            font: 12px sans-serif;		
+            background: lightsteelblue;	
+            border: 0px;		
+            border-radius: 8px;			
+            pointer-events: none;		
+        }
+        .content {
+          max-width: 600px;
+          margin: auto;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            text-align: center;
+        }
+    </style>
+    <title>CS 416 Data Visualization Narrative Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+  </head>
+  <body onload='init()'>
+    <div class='content'>
+    <h1>CS 416 Data Visualization Narrative Visualization</h1>
+    <h2>MPG By Fuel Type</h2>
+    <div id='chart'></div>
+    <div id="div_template" text-align='left'></div>
+    <select class="form-select-lg mb-3" aria-label="MPG Selector" id='MPGselect'>
+        <option selected value='AverageCityMPG'>Average City MPG</option>
+        <option value='AverageHighwayMPG'>Average Highway MPG</option>
+    </select>
+    
+    <ul class="nav justify-content-center">
+        <li class="nav-item">
+          <a class="nav-link" href="viz1.html">City/Highway MPG</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#">Fuel Type MPG</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="viz3.html">Cylinders MPG</a>
+        </li>
+      </ul>
+    </div>
+    
+    <!-- Optional JavaScript -->
+    <script type="text/javascript">
+    async function init() {
+        // Import data
+        var data = await d3.csv("https://flunky.github.io/cars2017.csv");
+
+        // Set up canvas
+        var svg = d3.select('#chart')
+            .append('svg')
+            .attr('width', 600)
+            .attr('height',600)
+            .append('g')
+            .attr('transform','translate(50,50)');
+
+        // Set up scales
+        var scale_x = d3.scalePoint().domain(['Gasoline', 'Diesel', 'Electricity']).range([0,500]).padding(0.8);
+        var scale_y = d3.scaleLog().domain([7, 150]).range([500,0]);
+        var colors = d3.scaleOrdinal().domain(['Gasoline', 'Diesel', 'Electricity']).range(d3.schemeCategory10);
+
+        // create a tooltip
+        var Tooltip = d3.select("#div_template")
+            .append("div")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("display", "flex")
+            .style('width', 'auto')
+            .style('height', 'auto')
+            .style('float', 'left');
+
+        // Three function that change the tooltip when user hover / move / leave a cell
+        var mouseover = function(d) {
+            Tooltip
+                .style("opacity", 1)
+
+            d3.select(this)
+                .raise()
+                .style('stroke-width',3)
+        };
+        var mousemove = function(d) {
+            Tooltip
+                .html("Make: " + d.Make +
+                "<br>Cylinders: " + d.EngineCylinders + 
+                "<br>Fuel: " + d.Fuel)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY) + "px")
+        };
+        var mouseleave = function(d) {
+            Tooltip
+                .style("opacity", 0)
+            d3.select(this)
+                .style('stroke-width',1)
+        };
+        
+
+        // Draw axes
+        //Label y axis
+        svg.append('g')
+            .call(d3.axisLeft(scale_y)
+                .tickValues([10,20,50,100])
+                .tickFormat(d3.format("~s")))
+            .append("text")
+            .attr("fill", "black")
+            .attr("transform", "translate(-25,250)rotate(270)")
+            .style("text-anchor","middle")
+            .text("MPG");
+        //Label x axis
+       svg
+            .append('g')
+            .attr("transform", "translate(0,500)")
+            .call(d3.axisBottom(scale_x)
+                .tickValues(['Gasoline', 'Diesel', 'Electricity']))
+            .append("text")
+            .attr("fill","black")
+            .attr("transform", "translate(250,25)")
+            .style("text-anchor","middle")
+            .text("Fuel Type");
+
+        // Draw in circles
+        const circles = svg.selectAll('circle').data(data)
+            .enter()
+            .append('circle')
+            .attr('class', function(d,i) {return "cars " + i;})
+            .attr("cx", function(d){return scale_x(d.Fuel)})
+            .attr("cy", function(d){return scale_y(d.AverageCityMPG)})
+            .attr("r", function(d) {return parseInt(d.EngineCylinders) + 2})
+            .attr("fill", function(d) {return colors(d.Fuel)})
+            .on('mouseover', mouseover)
+            .on('mousemove', mousemove)
+            .on('mouseout', mouseleave);
+
+        // Create function to update MPG calculation depending on selection
+        function update(selectedMPG) {
+            var filteredData = data.map(function(d){return {Fuel: d.Fuel, mpg: d[selectedMPG], EngineCylinders: d.EngineCylinders}})
+            
+            circles.data(filteredData)
+            .transition()
+            .duration(500)
+            .attr('cx', function(d){return scale_x(d.Fuel)})
+            .attr('cy', function(d){return scale_y(d.mpg)})
+            .attr('r', function(d) {return parseInt(d.EngineCylinders) + 2})
+            .attr('fill', function(d){return colors(d.Fuel)});
+        }
+        
+        // Bind function to Bootstrap select input
+        d3.select('#MPGselect').on("change", function(event,d){
+            const selectedOption = d3.select(this).property('value')
+            update(selectedOption)
+        });
+    }   
+    </script>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
