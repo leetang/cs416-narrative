@@ -34,7 +34,7 @@
   <body onload='init()'>
     <div class='content'>
     <h1>CS 416 Data Visualization Narrative Visualization</h1>
-    <h2>MPG By Fuel Type</h2>
+    <h2>MPG By Engine Cylinders</h2>
     <div id='chart'></div>
     <div id="div_template" text-align='left'></div>
     <select class="form-select-lg mb-3" aria-label="MPG Selector" id='MPGselect'>
@@ -47,10 +47,10 @@
           <a class="nav-link" href="viz1.html">City/Highway MPG</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link disabled" href="#">Fuel Type MPG</a>
+          <a class="nav-link" href="viz2.html">Fuel Type MPG</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="viz3.html">Cylinders MPG</a>
+          <a class="nav-link disabled" href="#">Cylinders MPG</a>
         </li>
       </ul>
     </div>
@@ -70,7 +70,7 @@
             .attr('transform','translate(50,50)');
 
         // Set up scales
-        var scale_x = d3.scalePoint().domain(['Gasoline', 'Diesel', 'Electricity']).range([0,500]).padding(0.8);
+        var scale_x = d3.scaleLinear().domain([-1,13]).range([0,500]);
         var scale_y = d3.scaleLog().domain([7, 150]).range([500,0]);
         var colors = d3.scaleOrdinal().domain(['Gasoline', 'Diesel', 'Electricity']).range(d3.schemeCategory10);
 
@@ -130,7 +130,7 @@
             .append('g')
             .attr("transform", "translate(0,500)")
             .call(d3.axisBottom(scale_x)
-                .tickValues(['Gasoline', 'Diesel', 'Electricity']))
+                .tickValues([0,2,4,6,8,10,12]))
             .append("text")
             .attr("fill","black")
             .attr("transform", "translate(250,25)")
@@ -142,7 +142,7 @@
             .enter()
             .append('circle')
             .attr('class', function(d,i) {return "cars " + i;})
-            .attr("cx", function(d){return scale_x(d.Fuel)})
+            .attr("cx", function(d){return scale_x(d.EngineCylinders)})
             .attr("cy", function(d){return scale_y(d.AverageCityMPG)})
             .attr("r", function(d) {return parseInt(d.EngineCylinders) + 2})
             .attr("fill", function(d) {return colors(d.Fuel)})
@@ -157,7 +157,7 @@
             circles.data(filteredData)
             .transition()
             .duration(500)
-            .attr('cx', function(d){return scale_x(d.Fuel)})
+            .attr('cx', function(d){return scale_x(d.EngineCylinders)})
             .attr('cy', function(d){return scale_y(d.mpg)})
             .attr('r', function(d) {return parseInt(d.EngineCylinders) + 2})
             .attr('fill', function(d){return colors(d.Fuel)});
