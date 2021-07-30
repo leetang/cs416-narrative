@@ -23,6 +23,7 @@
         .content {
           max-width: 600px;
           margin: auto;
+          justify-content: center;
         }
         h1, h2, h3, h4, h5, h6 {
             text-align: center;
@@ -30,6 +31,7 @@
     </style>
     <title>CS 416 Data Visualization Narrative Visualization</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
   </head>
   <body onload='init()'>
     <div class='content'>
@@ -37,14 +39,16 @@
     <h2>MPG By Fuel Type</h2>
     <div id='chart'></div>
     <div id="div_template" text-align='left'></div>
+    <div class="d-flex justify-content-center align-items-center container ">
     <select class="form-select-lg mb-3" aria-label="MPG Selector" id='MPGselect'>
         <option selected value='AverageCityMPG'>Average City MPG</option>
         <option value='AverageHighwayMPG'>Average Highway MPG</option>
     </select>
+    </div>
     
     <ul class="nav justify-content-center">
         <li class="nav-item">
-          <a class="nav-link" href="viz1.html">City/Highway MPG</a>
+          <a class="nav-link" href="viz1.html">Overview</a>
         </li>
         <li class="nav-item">
           <a class="nav-link disabled" href="#">Fuel Type MPG</a>
@@ -53,6 +57,11 @@
           <a class="nav-link" href="viz3.html">Cylinders MPG</a>
         </li>
       </ul>
+      <div class='text-center'>
+        <div class="d-grid gap-2">
+          <a class="btn btn-secondary " href="index.html" role="button">Back to Home</a>
+      </div>
+  </div>
     </div>
     
     <!-- Optional JavaScript -->
@@ -89,6 +98,44 @@
             .style('height', 'auto')
             .style('float', 'left');
 
+        // Draw annotations
+        const type = d3.annotationLabel
+
+        const annotations = [{
+            note: {
+                label: "Electric cars have lower highway than city MPG"
+            },
+            //can use x, y directly instead of data
+            x: 525,
+            y: 150,
+            dy: -50,
+            dx: 0,
+            connector: { end: "arrow" }
+            }, {
+            note: {
+                label: "Gas and diesel cars have better highway than city MPG"
+            },
+            //can use x, y directly instead of data
+            x: 240,
+            y: 255,
+            dy: 150,
+            dx: 0,
+            connector: { end: "arrow" }}];
+
+            const makeAnnotations = d3.annotation()
+            .editMode(false)
+            //also can set and override in the note.padding property
+            //of the annotation object
+            .notePadding(15)
+            .type(type)
+            //accessors & accessorsInverse not needed
+            //if using x, y in annotations JSON
+            .annotations(annotations);
+
+            d3.select("svg")
+            .append("g")
+            .attr("class", "annotation-group")
+            .call(makeAnnotations);
         // Three function that change the tooltip when user hover / move / leave a cell
         var mouseover = function(d) {
             Tooltip
@@ -136,6 +183,23 @@
             .attr("transform", "translate(250,25)")
             .style("text-anchor","middle")
             .text("Fuel Type");
+        svg.append('g').selectAll('rings')
+            .data([0,2,3,4,6,8,10,12])
+            .enter().append('circle')
+            .attr('cx', 450)
+            .attr('cy', function(d,i) {return 350 + i*15})
+            .attr('r', function(d) {return d + 2})
+            .style('fill','none');
+
+        svg.append('g').selectAll('rings_labels')
+            .data([0,2,3,4,6,8,10,12])
+            .enter().append('text')
+            .attr('x', 475)
+            .attr('y', function(d,i) {return 350 + i*15;})
+            .attr('text-anchor', 'left')
+            .text(function(d){return d;})
+            .style('fill','black')
+            .style('alignment-baseline', 'middle');
 
         // Draw in circles
         const circles = svg.selectAll('circle').data(data)

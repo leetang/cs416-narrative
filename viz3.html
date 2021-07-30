@@ -23,6 +23,7 @@
         .content {
           max-width: 600px;
           margin: auto;
+          justify-content: center;
         }
         h1, h2, h3, h4, h5, h6 {
             text-align: center;
@@ -30,6 +31,7 @@
     </style>
     <title>CS 416 Data Visualization Narrative Visualization</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
   </head>
   <body onload='init()'>
     <div class='content'>
@@ -37,14 +39,17 @@
     <h2>MPG By Engine Cylinders</h2>
     <div id='chart'></div>
     <div id="div_template" text-align='left'></div>
+    <div class='container'>
+    <div class="d-flex justify-content-center align-items-center container ">
     <select class="form-select-lg mb-3" aria-label="MPG Selector" id='MPGselect'>
         <option selected value='AverageCityMPG'>Average City MPG</option>
         <option value='AverageHighwayMPG'>Average Highway MPG</option>
     </select>
-    
+</div>
+
     <ul class="nav justify-content-center">
         <li class="nav-item">
-          <a class="nav-link" href="viz1.html">City/Highway MPG</a>
+          <a class="nav-link" href="viz1.html">Overview</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="viz2.html">Fuel Type MPG</a>
@@ -53,8 +58,14 @@
           <a class="nav-link disabled" href="#">Cylinders MPG</a>
         </li>
       </ul>
-    </div>
+
     
+    <div class='text-center'>
+      <div class="d-grid gap-2">
+        <a class="btn btn-secondary " href="index.html" role="button">Back to Home</a>
+    </div>
+</div>
+
     <!-- Optional JavaScript -->
     <script type="text/javascript">
     async function init() {
@@ -88,7 +99,44 @@
             .style('width', 'auto')
             .style('height', 'auto')
             .style('float', 'left');
+        
+        // Draw annotations
+        const type = d3.annotationCalloutCurve;
 
+        const annotations = [{
+            note: {
+                label: "Fuel economy decreases non-linearly as the number of engine cylinders increases",
+                lineType:"vertical",
+                align:"middle"
+            },
+            //can use x, y directly instead of data
+            nx: scale_x(0) + 50,
+            ny: scale_y(110) + 50,
+            dx: 100,
+            x: scale_x(12) + 50,
+            y: scale_y(14.5) + 50,
+            connector: {
+                end: 'arrow',
+                type:"curve",
+                points: [[-250,0]],
+                curve: d3.curveBasis
+            }
+        }];
+
+        const makeAnnotations = d3.annotation()
+            .editMode(false)
+            //also can set and override in the note.padding property
+            //of the annotation object
+            .notePadding(-150)
+            .type(type)
+            //accessors & accessorsInverse not needed
+            //if using x, y in annotations JSON
+            .annotations(annotations);
+
+            d3.select("svg")
+            .append("g")
+            .attr("class", "annotation-group")
+            .call(makeAnnotations);
         // Three function that change the tooltip when user hover / move / leave a cell
         var mouseover = function(d) {
             Tooltip
@@ -136,6 +184,24 @@
             .attr("transform", "translate(250,25)")
             .style("text-anchor","middle")
             .text("Fuel Type");
+
+        svg.append('g').selectAll('dots')
+            .data(['Gasoline', 'Diesel', 'Electricity'])
+            .enter().append('circle')
+            .attr('cx', 450)
+            .attr('cy', function(d,i) {return 25 + i*15;})
+            .attr('r',7)
+            .style('fill', function(d){return colors(d)})
+
+        svg.append('g').selectAll('dots_labels')
+            .data(['Gasoline', 'Diesel', 'Electricity'])
+            .enter().append('text')
+            .attr('x', 475)
+            .attr('y', function(d,i) {return 25 + i*15;})
+            .attr('text-anchor', 'left')
+            .text(function(d){return d;})
+            .style('fill','black')
+            .style('alignment-baseline', 'middle')
 
         // Draw in circles
         const circles = svg.selectAll('circle').data(data)

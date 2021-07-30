@@ -3,6 +3,7 @@
 <head>
 <title>CS 416 Data Visualization Narrative Visualization</title>
 <script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.min.js"></script>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <style> circle {stroke: black;} 
 div.tooltip {	
@@ -20,15 +21,19 @@ div.tooltip {
 .content {
   max-width: 600px;
   margin: auto;
+  justify-content: center;
 }
 h1, h2, h3, h4, h5, h6 {
     text-align: center;
+}
+annotation-group{
+    color:'red'
 }
 </style>
 </head>
 <div class='content'>
 <h1 text-align='center'>CS 416 Data Visualization Narrative Visualization</h1>
-<h2>City vs Highway MPG</h2>
+<h2>Overview</h2>
 <body onload='init()'>
 <svg width=600 height=600></svg>
 <div id="div_template" text-align='left'></div>
@@ -59,6 +64,66 @@ var Tooltip = d3.select("#div_template")
     .style('width', 'auto')
     .style('height', 'auto')
     .style('float', 'left');
+// Add annotations
+const type = d3.annotationCalloutCircle;
+
+const annotations = [{
+  note: {
+    label: "Electric cars have no engine cylinders and the highest city and highway MPG"
+  },
+  //can use x, y directly instead of data
+  x: 500,
+  y: 125,
+  dy: 75,
+  dx: -1,
+  subject: {
+    radius: 75,
+    radiusPadding: 5
+  }
+},
+{
+  note: {
+    label: "Diesel cars on average have MPGs comparable to the most efficient gasoline cars"
+  },
+  //can use x, y directly instead of data
+  x: 275,
+  y: 300,
+  dy: -100,
+  dx: -10,
+  subject: {
+    radius: 50,
+    radiusPadding: 5
+  }
+},
+{
+  note: {
+    label: "12 cylinder engine luxury cars have the worst fuel economy."
+  },
+  //can use x, y directly instead of data
+  x: 130,
+  y: 400,
+  dy: 30,
+  dx: 50,
+  subject: {
+    radius: 50,
+    radiusPadding: 5
+  }
+}];
+
+const makeAnnotations = d3.annotation()
+  .editMode(false)
+  //also can set and override in the note.padding property
+  //of the annotation object
+  .notePadding(15)
+  .type(type)
+  //accessors & accessorsInverse not needed
+  //if using x, y in annotations JSON
+  .annotations(annotations);
+
+d3.select("svg")
+  .append("g")
+  .attr("class", "annotation-group")
+  .call(makeAnnotations);
 
 // Three function that change the tooltip when user hover / move / leave a cell
 var mouseover = function(d) {
@@ -159,6 +224,10 @@ d3.select('svg').append('g').selectAll('rings_labels')
     .text(function(d){return d;})
     .style('fill','black')
     .style('alignment-baseline', 'middle');
+
+
+
+
 /*
 //Add a Voronoi grid for mouseover tooltips
 const voronoi = d3.voronoi()
@@ -175,6 +244,7 @@ d3.select('svg').append('g').selectAll('path')
     .style('stroke','black')
     .style('fill','none')
     .style('pointer-events','all')
+    .on('mouseover', showTooltip)
 
 
 //Show the tooltip on the hovered over circle instead of the Voronoi grid
@@ -210,7 +280,7 @@ function removeTooltip(d) {
 
 <ul class="nav justify-content-center">
     <li class="nav-item">
-      <a class="nav-link disabled" href="#">City/Highway MPG</a>
+      <a class="nav-link disabled" href="#">Overview</a>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="viz2.html">Fuel Type MPG</a>
@@ -219,6 +289,11 @@ function removeTooltip(d) {
       <a class="nav-link" href="viz3.html">Cylinders MPG</a>
     </li>
   </ul>
+  <div class='text-center'>
+    <div class="d-grid gap-2">
+      <a class="btn btn-secondary " href="index.html" role="button">Back to Home</a>
+  </div>
+</div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
